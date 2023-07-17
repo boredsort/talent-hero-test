@@ -93,12 +93,14 @@ class EbayProductStrategy:
         seller_info = self.get_seller_info(soup)
         description = self.get_description(soup)
         image_urls = self.get_image_urls(soup)
+        shipping = self.get_shipping(soup)
 
         results.update({
         "data": {
             "url": self.origin_url,
             "title": title,
             "price": price,
+            "shipping": shipping,
             "category_tree": category,
             "specifications": specs,
             "description": description,
@@ -125,7 +127,6 @@ class EbayProductStrategy:
         
         return None
 
-    
     @attribute
     def get_category_tree(self, soup):
         paths = []
@@ -160,7 +161,6 @@ class EbayProductStrategy:
                 specs.update({key: val})
 
         return specs
-
 
     @attribute
     def get_description(self, soup):
@@ -209,6 +209,19 @@ class EbayProductStrategy:
                     images.append(url.replace('s-l64', 's-l500'))
 
         return images
+    
+    @attribute
+    def get_shipping(self, soup):
+        tag = soup.select_one('.ux-labels-values--shipping')
+        if tag:
+            a_tag = tag.select_one('[data-testid="ux-action"]')
+            if a_tag:
+                a_tag.extract()
+            txt = tag.get_text().strip()
+            if txt:
+                # haxx
+                return txt.replace('\xa0',' ')
+        return None
 
     def get_item_id(self, soup):
         tag = soup.select_one('[Property="og:url"]') or soup.select_one('[rel="canonical"]')
